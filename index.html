@@ -392,7 +392,7 @@
 
 <script>
 // ========== URL ДЛЯ GOOGLE SHEETS ==========
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw9lVEcIu-MKAefkRd_X1hUyW4hWYvGra0HUvdy212oVTEYdzUFt4UCDKoWlTNn79c/exec";
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyIwjI7LWtN2L2yrBguVXXnaphcLrs3mgOyLqTg69x0TlEL7FiQLadFl0FKpUeTmNwv/exec";
 
 // ========== СТИМУЛЫ (замените на свои пути) ==========
 const stimuli = [
@@ -574,11 +574,9 @@ async function submitForm() {
   
   submitted = true;
   document.getElementById("submitBtn").innerHTML = "⏳ Отправка...";
-  document.getElementById("submitBtn").disabled = true;
   
   const ts = new Date().toISOString();
   const pid = "P_" + Math.random().toString(36).substr(2, 8).toUpperCase();
-  
   const rows = [];
   
   for (let i = 0; i < stimuli.length; i++) {
@@ -593,8 +591,9 @@ async function submitForm() {
       gender: gender,
       native_lang: native,
       headphones: headphones,
-      stimulus: stim.id,
-      play_count: pc,
+      stimulus_number: i + 1,        // ← НОМЕР СТИМУЛА (1-10)
+      stimulus_id: stim.id,          // ← ID СТИМУЛА (S01-S10)
+      play_count: pc,                // ← КОЛИЧЕСТВО ПРОСЛУШИВАНИЙ
       q1: ans[0] === "left" ? scales[0].left : (ans[0] === "right" ? scales[0].right : ""),
       q2: ans[1] === "left" ? scales[1].left : (ans[1] === "right" ? scales[1].right : ""),
       q3: ans[2] === "left" ? scales[2].left : (ans[2] === "right" ? scales[2].right : ""),
@@ -603,19 +602,20 @@ async function submitForm() {
       q6: ans[5] === "left" ? scales[5].left : (ans[5] === "right" ? scales[5].right : ""),
       q7: ans[6] === "left" ? scales[6].left : (ans[6] === "right" ? scales[6].right : ""),
       q8: ans[7] === "left" ? scales[7].left : (ans[7] === "right" ? scales[7].right : ""),
-      q9: ans[8] === "left" ? scales[8].left : (ans[8] === "right" ? scales[8].right : ""),
-      q10: ans[9] === "left" ? scales[9].left : (ans[9] === "right" ? scales[9].right : "")
+      q9: ans[8] === "left" ? scales[8].left : (ans[8] === "right" ? scales[8].right : "")
     };
-    
     rows.push(row);
     await sendToGoogleSheets(row);
   }
   
-  const header = ["timestamp", "participant_id", "age", "gender", "native_lang", "headphones", "stimulus", "play_count",
-    ...scales.map(s => `${s.left}/${s.right}`)];
+  // CSV с правильными колонками
+  const header = ["timestamp", "participant_id", "age", "gender", "native_lang", "headphones", 
+                  "stimulus_number", "stimulus_id", "play_count",
+                  ...scales.map(s => `${s.left}/${s.right}`)];
   const csvRows = rows.map(r => [
-    r.timestamp, r.participant_id, r.age, r.gender, r.native_lang, r.headphones, r.stimulus, r.play_count,
-    r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8, r.q9, r.q10
+    r.timestamp, r.participant_id, r.age, r.gender, r.native_lang, r.headphones,
+    r.stimulus_number, r.stimulus_id, r.play_count,
+    r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8, r.q9
   ].join(","));
   
   csvData = [header.join(","), ...csvRows].join("\n");
