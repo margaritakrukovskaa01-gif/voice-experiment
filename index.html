@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пилотный эксперимент — Восприятие личности по голосу</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #F0F4F8;
+    padding: 20px;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .screen {
+    display: none;
+  }
+  .screen.active {
+    display: block;
+  }
+  button {
+    background: #2C5F8A;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover {
+    background: #1E4A72;
+  }
+  .play-btn {
+    background: #2C5F8A;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    font-size: 20px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scale-item {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #EDF2F7;
+  }
+  .scale-question {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: #1A202C;
+  }
+  .bipolar-options {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+  .bipolar-option {
+    flex: 1;
+    text-align: center;
+  }
+  .bipolar-option input {
+    display: none;
+  }
+  .bipolar-option label {
+    display: block;
+    padding: 14px 12px;
+    background: #F7FAFC;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 2px solid #E2E8F0;
+  }
+  .bipolar-option input:checked + label {
+    background: #2C5F8A;
+    color: white;
+    border-color: #2C5F8A;
+  }
+  .bipolar-option label:hover {
+    background: #E2E8F0;
+  }
+  .progress {
+    background: #E2E8F0;
+    height: 6px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+  .progress-bar {
+    background: #2C5F8A;
+    height: 100%;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+  }
+  .validation {
+    color: #E53E3E;
+    font-size: 14px;
+    margin-top: 16px;
+    display: none;
+    text-align: center;
+  }
+  .validation.show {
+    display: block;
+  }
+  h1 {
+    font-size: 26px;
+    margin-bottom: 12px;
+    color: #1A202C;
+  }
+  h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #1A202C;
+  }
+  .audio-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #F7FAFC;
+    border-radius: 20px;
+  }
+  .play-count {
+    background: #E8F5EE;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #276749;
+  }
+  .stim-counter {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+  .intro-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .intro-header .emoji {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  .intro-body {
+    margin: 20px 0;
+  }
+  .intro-body p {
+    margin-bottom: 14px;
+    color: #4A5568;
+  }
+  .highlight {
+    background: #EBF8FF;
+    padding: 16px;
+    border-radius: 16px;
+    margin: 20px 0;
+    border-left: 4px solid #2C5F8A;
+  }
+  .instruction-box {
+    background: #F0FFF4;
+    padding: 16px;
+    border-radius: 16px;
+    margin: 20px 0;
+    border-left: 4px solid #38A169;
+  }
+  .earphone-tip {
+    background: #FFFAF0;
+    border: 1px solid #FBD38D;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 20px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .form-field {
+    margin-bottom: 24px;
+  }
+  .form-field label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #2D3748;
+  }
+  .form-field input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+  .radio-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+  }
+  .researcher-note {
+    background: #EDF2F7;
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    font-style: italic;
+    color: #4A5568;
+  }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #A0AEC0;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- ЭКРАН 1: ПРИВЕТСТВИЕ ОТ РИТЫ -->
+  <div class="screen active" id="screenStart">
+    <div class="card">
+      <div class="intro-header">
+        <div class="emoji">🎙️</div>
+        <h1>Восприятие личности по голосу</h1>
+      </div>
+      
+      <div class="intro-body">
+        <p><strong>Привет! 👋</strong> Меня зовут Рита, я провожу <strong>пилотный эксперимент</strong> для  диссертации в СПбГУ.</p>
+        
+        <div class="highlight">
+          <strong>Что нужно сделать?</strong><br>
+          Прослушать <strong>10 коротких аудио</strong> (5–10 секунд каждое) и ответить на вопрос:<br>
+          <em>«Этот человек скорее [характеристика А] или скорее [характеристика Б]?»</em>
+        </div>
+        
+        <div class="instruction-box">
+          <strong>📋 Как отвечать</strong><br>
+          • На каждой шкале — <strong>только два варианта</strong>, выберите тот, который лучше подходит<br>
+          • Вы услышите перевернутые записи фраз(привет-тевирп), ориентируйтесь на <strong>голос</strong> (интонацию, темп, тембр)<br>
+          • Можно прослушать каждый фрагмент <strong>несколько раз</strong><br>
+          • Отвечайте по <strong>первому впечатлению</strong> — здесь нет правильных ответов
+        </div>
+        
+        <div class="earphone-tip">
+          🎧 <span><strong>Важно!</strong> Пожалуйста, используйте наушники для чистоты эксперимента</span>
+        </div>
+        
+        <p style="font-size: 14px; color: #718096;">⏱️ Эксперимент займёт <strong>7–10 минут</strong>. Всё анонимно.</p>
+        
+        <div class="researcher-note">
+          💬 <strong>От Риты:</strong> «Спасибо, что помогаете с пилотом! Если что-то пойдёт не так — напишите мне тг @missspring2014, я всё исправлю. Ваши ответы очень важны для исследования 🙏»
+        </div>
+      </div>
+      
+      <button id="startBtn" style="width: 100%; margin-top: 16px;">🎧 Начать эксперимент →</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН 2: ОЦЕНКА СТИМУЛОВ -->
+  <div class="screen" id="screenStim">
+    <div class="card">
+      <div class="progress-label">
+        <span id="stimCounter">Стимул 1 из 10</span>
+        <span id="stimPercent">0%</span>
+      </div>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      
+      <h2 id="stimTitle">Говорящий 1</h2>
+      
+      <div class="audio-wrap">
+        <button class="play-btn" id="playBtn">▶</button>
+        <div style="flex:1">
+          <div id="audioName" style="font-size:12px; color:#718096">—</div>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
+            <div style="flex:1; height:4px; background:#E2E8F0; border-radius:10px; cursor:pointer" id="seekbar">
+              <div id="seekFill" style="width:0%; height:100%; background:#2C5F8A; border-radius:10px"></div>
+            </div>
+            <span id="timeDisplay" style="font-size:12px; color:#718096">0:00 / 0:00</span>
+          </div>
+        </div>
+        <div class="play-count" id="playCount">▶ 0</div>
+      </div>
+      <p style="font-size:12px; color:#718096; margin-top:-8px; margin-bottom:20px;">🎧 Можно прослушать несколько раз</p>
+      
+      <div id="scales"></div>
+      <div class="validation" id="validationMsg">⚠ Пожалуйста, выберите один из двух вариантов</div>
+      <div class="nav-row">
+        <button id="backBtn" style="background:#CBD5E0; color:#4A5568; visibility:hidden">← Назад</button>
+        <button id="nextBtn">Далее →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН 3: ДЕМОГРАФИЯ -->
+  <div class="screen" id="screenDemo">
+    <div class="card">
+      <h2>📋 Последний шаг</h2>
+      <p style="color:#718096; margin-bottom:24px;">Несколько вопросов для статистики (всё анонимно)</p>
+      
+      <div class="form-field">
+        <label>Сколько вам лет?</label>
+        <input type="number" id="age" min="16" max="99" placeholder="Например: 24">
+      </div>
+      
+      <div class="form-field">
+        <label>Ваш пол</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="Мужской"> Мужской</label>
+          <label><input type="radio" name="gender" value="Женский"> Женский</label>
+          <label><input type="radio" name="gender" value="Другой"> Другой</label>
+          <label><input type="radio" name="gender" value="Не указываю"> Не указываю</label>
+        </div>
+      </div>
+      
+      <div class="form-field">
+        <label>Родной язык</label>
+        <div class="radio-group">
+          <label><input type="radio" name="native" value="Русский"> Русский</label>
+          <label><input type="radio" name="native" value="Русский и другой"> Русский и другой</label>
+          <label><input type="radio" name="native" value="Другой"> Другой</label>
+        </div>
+      </div>
+      
+      <div class="form-field">
+        <label>Используете наушники?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="headphones" value="Да"> Да</label>
+          <label><input type="radio" name="headphones" value="Нет"> Нет</label>
+        </div>
+      </div>
+      
+      <div class="validation" id="demoValidation">⚠ Пожалуйста, ответьте на все вопросы</div>
+      
+      <div class="nav-row">
+        <button id="demoBackBtn" style="background:#CBD5E0; color:#4A5568;">← Назад</button>
+        <button id="submitBtn">✅ Завершить и отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН 4: СПАСИБО -->
+  <div class="screen" id="screenFinish">
+    <div class="card" style="text-align:center">
+      <div style="font-size: 56px; margin-bottom: 16px;">🎉</div>
+      <h2>Спасибо большое!</h2>
+      <p style="color:#4A5568; margin-bottom: 16px;">Ваши ответы отправлены.</p>
+      <p style="color:#718096; font-size:14px;">Это очень помогает исследованию ❤️</p>
+      <button id="downloadBtn" style="margin-top: 24px; background:#38A169;">📥 Скачать копию (CSV)</button>
+      <p style="margin-top: 20px; font-size:12px; color:#A0AEC0;">Рита, магистерская работа СПбГУ</p>
+    </div>
+  </div>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+// ========== URL ДЛЯ GOOGLE SHEETS ==========
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbw9lVEcIu-MKAefkRd_X1hUyW4hWYvGra0HUvdy212oVTEYdzUFt4UCDKoWlTNn79c/exec";
+
+// ========== СТИМУЛЫ (замените на свои пути) ==========
+const stimuli = [
+  { id: "S01", file: "audio/common_voice_ru_19921774_rev.wav" },
+  { id: "S02", file: "audio/common_voice_ru_21289707_rev.wav" },
+  { id: "S03", file: "audio/common_voice_ru_22782367_rev.wav" },
+  { id: "S04", file: "audio/common_voice_ru_23878183_rev.wav" },
+  { id: "S05", file: "audio/common_voice_ru_26136749_rev.wav" },
+  { id: "S06", file: "audio/common_voice_ru_26817662_rev.wav" },
+  { id: "S07", file: "audio/common_voice_ru_27574549_rev.wav" },
+  { id: "S08", file: "audio/common_voice_ru_31912453_rev.wav" },
+  { id: "S09", file: "audio/common_voice_ru_32435252_rev.wav" },
+  { id: "S10", file: "audio/common_voice_ru_43056673_rev.wav" },
+];
+
+// ========== ШКАЛЫ (биполярные дихотомические) ==========
+const scales = [
+  { id: "q1",  left: "располагает к себе",            right: "отталкивает" },
+  { id: "q8",  left: "общительный",                   right: "замкнутый" },
+  { id: "q2",  left: "доброжелательный",              right: "недоброжелательный" },
+  { id: "q3",  left: "вызывает доверие",              right: "не вызывает доверия" },
+  { id: "q5",  left: "уверенный в себе",              right: "неуверенный" },
+  { id: "q6",  left: "производит впечатление лидера", right: "производит впечатление ведомого" },
+  { id: "q7",  left: "знающий",                       right: "неопытный" },
+  { id: "q9",  left: "организованный",                right: "неорганизованный" },
+  { id: "q10", left: "открытый новому",               right: "консервативный" },
+];
+
+// ========== СОСТОЯНИЕ ==========
+let current = 0;
+let answers = {};
+let playCounts = {};
+let csvData = "";
+let submitted = false;
+
+const audio = document.getElementById("audio");
+
+// ========== ФУНКЦИИ ==========
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function formatTime(s) {
+  if (isNaN(s)) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec < 10 ? "0" + sec : sec}`;
+}
+
+function renderScales() {
+  const sid = stimuli[current].id;
+  const saved = answers[sid] || {};
+  const container = document.getElementById("scales");
+  container.innerHTML = "";
+  
+  scales.forEach((sc, idx) => {
+    const div = document.createElement("div");
+    div.className = "scale-item";
+    div.innerHTML = `
+      <div class="scale-question">${sc.left} <span style="color:#A0AEC0">или</span> ${sc.right}?</div>
+      <div class="bipolar-options">
+        <div class="bipolar-option">
+          <input type="radio" name="q${idx}" id="q${idx}_left" value="left" ${saved[idx] === "left" ? "checked" : ""}>
+          <label for="q${idx}_left">${sc.left}</label>
+        </div>
+        <div class="bipolar-option">
+          <input type="radio" name="q${idx}" id="q${idx}_right" value="right" ${saved[idx] === "right" ? "checked" : ""}>
+          <label for="q${idx}_right">${sc.right}</label>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function saveCurrentAnswers() {
+  const sid = stimuli[current].id;
+  if (!answers[sid]) answers[sid] = {};
+  for (let i = 0; i < scales.length; i++) {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected) {
+      answers[sid][i] = selected.value;
+    }
+  }
+}
+
+function loadStim() {
+  const s = stimuli[current];
+  const total = stimuli.length;
+  const percent = Math.round(((current + 1) / total) * 100);
+  
+  document.getElementById("stimCounter").textContent = `Стимул ${current + 1} из ${total}`;
+  document.getElementById("stimPercent").textContent = percent + "%";
+  document.getElementById("progressBar").style.width = percent + "%";
+  document.getElementById("stimTitle").innerHTML = `Говорящий ${current + 1}`;
+  document.getElementById("audioName").innerHTML = s.file.split("/").pop();
+  document.getElementById("playCount").innerHTML = `▶ ${playCounts[s.id] || 0}`;
+  document.getElementById("backBtn").style.visibility = current === 0 ? "hidden" : "visible";
+  document.getElementById("backBtn").style.opacity = current === 0 ? "0" : "1";
+  
+  audio.src = s.file;
+  audio.load();
+  
+  renderScales();
+  
+  document.getElementById("validationMsg").classList.remove("show");
+}
+
+function nextStim() {
+  saveCurrentAnswers();
+  
+  const sid = stimuli[current].id;
+  const saved = answers[sid] || {};
+  const allFilled = scales.every((_, idx) => saved[idx] !== undefined);
+  
+  if (!allFilled) {
+    document.getElementById("validationMsg").classList.add("show");
+    return;
+  }
+  
+  audio.pause();
+  audio.currentTime = 0;
+  document.getElementById("playBtn").innerHTML = "▶";
+  
+  if (current + 1 < stimuli.length) {
+    current++;
+    loadStim();
+  } else {
+    showScreen("screenDemo");
+  }
+}
+
+function prevStim() {
+  saveCurrentAnswers();
+  if (current > 0) {
+    current--;
+    loadStim();
+  }
+}
+
+function togglePlay() {
+  if (audio.paused) {
+    audio.play();
+    document.getElementById("playBtn").innerHTML = "⏸";
+  } else {
+    audio.pause();
+    document.getElementById("playBtn").innerHTML = "▶";
+  }
+}
+
+async function sendToGoogleSheets(row) {
+  try {
+    await fetch(SHEETS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(row)
+    });
+    console.log("Отправлено в Google Sheets:", row.stimulus);
+  } catch(e) {
+    console.error("Ошибка отправки:", e);
+  }
+}
+
+async function submitForm() {
+  if (submitted) return;
+  
+  const age = document.getElementById("age").value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value || "";
+  const native = document.querySelector('input[name="native"]:checked')?.value || "";
+  const headphones = document.querySelector('input[name="headphones"]:checked')?.value || "";
+  
+  if (!age || !gender || !native || !headphones) {
+    document.getElementById("demoValidation").classList.add("show");
+    return;
+  }
+  
+  submitted = true;
+  document.getElementById("submitBtn").innerHTML = "⏳ Отправка...";
+  document.getElementById("submitBtn").disabled = true;
+  
+  const ts = new Date().toISOString();
+  const pid = "P_" + Math.random().toString(36).substr(2, 8).toUpperCase();
+  
+  const rows = [];
+  
+  for (let i = 0; i < stimuli.length; i++) {
+    const stim = stimuli[i];
+    const ans = answers[stim.id] || {};
+    const pc = playCounts[stim.id] || 0;
+    
+    const row = {
+      timestamp: ts,
+      participant_id: pid,
+      age: age,
+      gender: gender,
+      native_lang: native,
+      headphones: headphones,
+      stimulus: stim.id,
+      play_count: pc,
+      q1: ans[0] === "left" ? scales[0].left : (ans[0] === "right" ? scales[0].right : ""),
+      q2: ans[1] === "left" ? scales[1].left : (ans[1] === "right" ? scales[1].right : ""),
+      q3: ans[2] === "left" ? scales[2].left : (ans[2] === "right" ? scales[2].right : ""),
+      q4: ans[3] === "left" ? scales[3].left : (ans[3] === "right" ? scales[3].right : ""),
+      q5: ans[4] === "left" ? scales[4].left : (ans[4] === "right" ? scales[4].right : ""),
+      q6: ans[5] === "left" ? scales[5].left : (ans[5] === "right" ? scales[5].right : ""),
+      q7: ans[6] === "left" ? scales[6].left : (ans[6] === "right" ? scales[6].right : ""),
+      q8: ans[7] === "left" ? scales[7].left : (ans[7] === "right" ? scales[7].right : ""),
+      q9: ans[8] === "left" ? scales[8].left : (ans[8] === "right" ? scales[8].right : ""),
+      q10: ans[9] === "left" ? scales[9].left : (ans[9] === "right" ? scales[9].right : "")
+    };
+    
+    rows.push(row);
+    await sendToGoogleSheets(row);
+  }
+  
+  const header = ["timestamp", "participant_id", "age", "gender", "native_lang", "headphones", "stimulus", "play_count",
+    ...scales.map(s => `${s.left}/${s.right}`)];
+  const csvRows = rows.map(r => [
+    r.timestamp, r.participant_id, r.age, r.gender, r.native_lang, r.headphones, r.stimulus, r.play_count,
+    r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8, r.q9, r.q10
+  ].join(","));
+  
+  csvData = [header.join(","), ...csvRows].join("\n");
+  
+  showScreen("screenFinish");
+}
+
+function downloadCSV() {
+  if (!csvData) return;
+  const blob = new Blob(["\uFEFF" + csvData], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `voice_experiment_${new Date().toISOString().slice(0,19).replace(/:/g, "-")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ========== АУДИО СОБЫТИЯ ==========
+audio.addEventListener("ended", () => {
+  document.getElementById("playBtn").innerHTML = "▶";
+  const sid = stimuli[current]?.id;
+  if (sid) {
+    playCounts[sid] = (playCounts[sid] || 0) + 1;
+    document.getElementById("playCount").innerHTML = `▶ ${playCounts[sid]}`;
+  }
+});
+
+audio.addEventListener("timeupdate", () => {
+  if (!audio.duration) return;
+  const percent = (audio.currentTime / audio.duration) * 100;
+  const seekFill = document.getElementById("seekFill");
+  if (seekFill) seekFill.style.width = percent + "%";
+  document.getElementById("timeDisplay").innerHTML = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+});
+
+audio.addEventListener("loadedmetadata", () => {
+  document.getElementById("timeDisplay").innerHTML = `0:00 / ${formatTime(audio.duration)}`;
+});
+
+// ========== СОБЫТИЯ ИНТЕРФЕЙСА ==========
+document.getElementById("startBtn").onclick = () => {
+  current = 0;
+  loadStim();
+  showScreen("screenStim");
+};
+document.getElementById("nextBtn").onclick = nextStim;
+document.getElementById("backBtn").onclick = prevStim;
+document.getElementById("playBtn").onclick = togglePlay;
+document.getElementById("seekbar").onclick = (e) => {
+  if (!audio.duration) return;
+  const rect = e.target.getBoundingClientRect();
+  const percent = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = percent * audio.duration;
+};
+document.getElementById("demoBackBtn").onclick = () => {
+  showScreen("screenStim");
+};
+document.getElementById("submitBtn").onclick = submitForm;
+document.getElementById("downloadBtn").onclick = downloadCSV;
+</script>
+</body>
+</html>
